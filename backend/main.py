@@ -49,10 +49,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 # --- Add CORS Middleware ---
-origins = [
-    "http://localhost:5174",
-    "http://127.0.0.1:5174",
-]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // Import Hook
 
 function Profile() {
   const [profile, setProfile] = useState(null);
@@ -7,15 +8,14 @@ function Profile() {
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  
+  const navigate = useNavigate(); // Initialize Hook
 
   // --- HELPER FUNCTION: CLEANS UP THE PGN ---
   function formatPGN(pgnString) {
     if (!pgnString) return "No moves";
-    // Split the PGN into lines
     const lines = pgnString.split("\n");
-    // Remove lines that start with brackets [ ] (headers)
     const movesOnly = lines.filter(line => !line.startsWith("["));
-    // Join them back together and trim extra space
     return movesOnly.join(" ").trim();
   }
 
@@ -56,84 +56,102 @@ function Profile() {
     fetchData();
   }, []);
 
-  if (loading) return <h2 style={{textAlign: "center"}}>Loading your chess data...</h2>;
-  if (error) return <h2 style={{color: "red", textAlign: "center"}}>{error}</h2>;
-
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", padding: "20px" }}>
+    <div className="min-h-screen flex flex-col p-4">
       
-      {/* --- Section 1: User Info --- */}
-      <div style={{ textAlign: "center", marginBottom: "40px" }}>
-        <h1>{profile?.username}'s Profile</h1>
-        <p style={{ color: "#aaa" }}>User ID: {profile?.id}</p>
-      </div>
+      {/* --- NEW HEADER (Back Button) --- */}
+      <header className="w-full max-w-5xl mx-auto flex justify-between items-center p-2 mb-8">
+        <button 
+            onClick={() => navigate("/")}
+            className="text-xl text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+        >
+            <i className="fas fa-arrow-left"></i> Back to Menu
+        </button>
+      </header>
 
-      {/* --- Section 2: The Personality Analysis --- */}
-      <div style={{ 
-        backgroundColor: "#333", 
-        padding: "20px", 
-        borderRadius: "10px", 
-        marginBottom: "30px",
-        border: "1px solid #555"
-      }}>
-        <h2 style={{ borderBottom: "1px solid #555", paddingBottom: "10px" }}>
-          ♟️ Chess Personality Analysis
-        </h2>
+      <div className="w-full max-w-5xl mx-auto">
         
-        {analysis ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginTop: "20px" }}>
-            <div>
-              <h3>Your Style: <span style={{ color: "#4CAF50" }}>{analysis.personality_type}</span></h3>
-              <p>Celebrity Match: <strong>{analysis.celebrity_match}</strong></p>
-              <p>Favorite Opening: {analysis.opening_preference || "Unknown"}</p>
-            </div>
-            <div style={{ backgroundColor: "#222", padding: "15px", borderRadius: "5px" }}>
-              <p>Total Games Analyzed: <strong>{analysis.total_games}</strong></p>
-              <p>Aggression Score: {analysis.aggressive_score}</p>
-              <p>Defensive Score: {analysis.defensive_score}</p>
-            </div>
-          </div>
+        {loading ? (
+           <h2 className="text-center text-xl text-gray-400">Loading data...</h2>
+        ) : error ? (
+           <h2 className="text-center text-xl text-red-400">{error}</h2>
         ) : (
-          <p>Play some games to generate your analysis!</p>
+          <>
+            {/* --- User Info --- */}
+            <div className="text-center mb-10">
+                <h1 className="text-5xl font-['Space_Grotesk'] font-bold mb-2 text-white">
+                    {profile?.username}'s Profile
+                </h1>
+                <p className="text-gray-500">User ID: {profile?.id}</p>
+            </div>
+
+            {/* --- Personality Analysis --- */}
+            <div className="bg-[#2a2a2a] p-8 rounded-2xl border border-[#3a3a3a] shadow-2xl mb-10">
+                <h2 className="text-2xl font-bold mb-6 border-b border-[#3a3a3a] pb-4 text-gray-200">
+                ♟️ Chess Personality Analysis
+                </h2>
+                
+                {analysis ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* ... inside the analysis grid ... */}
+
+                    <div className="mt-8 p-6 bg-[#1f1f1f] rounded-xl border border-indigo-500/30">
+                      <h3 className="text-xl font-bold text-indigo-400 mb-3 flex items-center gap-2">
+                        <i className="fas fa-robot"></i> AI Psychological Profile
+                      </h3>
+                      <p className="text-gray-300 italic leading-relaxed">
+                        "{analysis.ai_report}"
+                      </p>
+                    </div>
+                    <div>
+                        <h3 className="text-gray-400 uppercase text-sm tracking-wider mb-1">Playing Style</h3>
+                        <p className="text-3xl font-bold text-[#4CAF50] mb-4">{analysis.personality_type}</p>
+                        
+                        <h3 className="text-gray-400 uppercase text-sm tracking-wider mb-1">Celebrity Match</h3>
+                        <p className="text-2xl font-bold text-white mb-4">{analysis.celebrity_match}</p>
+
+                        <h3 className="text-gray-400 uppercase text-sm tracking-wider mb-1">Favorite Opening</h3>
+                        <p className="text-lg text-gray-300">{analysis.opening_preference || "Unknown"}</p>
+                    </div>
+                    <div className="bg-[#1f1f1f] p-6 rounded-xl flex flex-col justify-center gap-4">
+                        <div className="flex justify-between border-b border-gray-700 pb-2">
+                            <span className="text-gray-400">Total Games</span>
+                            <span className="text-white font-bold">{analysis.total_games}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-700 pb-2">
+                            <span className="text-gray-400">Aggression Score</span>
+                            <span className="text-red-400 font-bold">{analysis.aggressive_score}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-gray-400">Defensive Score</span>
+                            <span className="text-green-400 font-bold">{analysis.defensive_score}</span>
+                        </div>
+                    </div>
+                </div>
+                ) : (
+                <p className="text-center text-gray-400 italic">Play some games to generate your analysis!</p>
+                )}
+            </div>
+
+            {/* --- Recent Games --- */}
+            <h3 className="text-2xl font-bold mb-6 font-['Space_Grotesk'] text-gray-200">Recent Games History</h3>
+            {games.length === 0 ? (
+                <p className="text-gray-500">No games saved yet.</p>
+            ) : (
+                <ul className="space-y-4">
+                {games.map((g) => (
+                    <li key={g.id} className="bg-[#2a2a2a] p-6 rounded-xl border border-[#3a3a3a]">
+                    <div className="mb-3 text-white font-bold">Game #{g.id}</div>
+                    <div className="bg-[#1f1f1f] p-4 rounded-lg font-mono text-sm text-gray-400 max-h-32 overflow-y-auto whitespace-pre-wrap break-words">
+                        {formatPGN(g.pgn_moves)}
+                    </div>
+                    </li>
+                ))}
+                </ul>
+            )}
+          </>
         )}
       </div>
-
-      {/* --- Section 3: Recent Games History --- */}
-      <h3>Recent Games History</h3>
-      {games.length === 0 ? (
-        <p>No games saved yet.</p>
-      ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {games.map((g) => (
-            <li key={g.id} style={{ 
-              backgroundColor: "#444", 
-              margin: "10px 0", 
-              padding: "15px", 
-              borderRadius: "5px" 
-            }}>
-              <div style={{ marginBottom: "5px", color: "#fff" }}>
-                <strong>Game #{g.id}</strong>
-              </div>
-              
-              {/* SCROLLABLE PGN BOX */}
-              <div style={{ 
-                backgroundColor: "#222", 
-                padding: "10px", 
-                borderRadius: "4px",
-                fontFamily: "monospace", 
-                color: "#ddd",
-                fontSize: "12px",
-                maxHeight: "100px",       // Limit height
-                overflowY: "auto",        // Add scrollbar if too tall
-                whiteSpace: "pre-wrap",   // Preserve formatting and wrap text
-                wordBreak: "break-word"   // Break long moves to next line
-              }}>
-                {formatPGN(g.pgn_moves)}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }

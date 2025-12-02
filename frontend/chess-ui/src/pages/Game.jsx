@@ -2,28 +2,23 @@ import { useState } from "react";
 import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Game() {
   const [game, setGame] = useState(new Chess());
+  const navigate = useNavigate();
 
   function onDrop(sourceSquare, targetSquare) {
     try {
-      // FIX: Create a new game instance NOT from FEN, but essentially clone it
-      // We load the PGN (history) from the current game into a new one
       const gameCopy = new Chess();
       gameCopy.loadPgn(game.pgn()); 
-
-      // Attempt the move on this full-history copy
       const result = gameCopy.move({
         from: sourceSquare,
         to: targetSquare,
         promotion: "q", 
       });
-
-      // If move is successful, update state
       setGame(gameCopy);
       return true;
-
     } catch (error) {
       return false;
     }
@@ -35,39 +30,91 @@ function Game() {
 
   async function handleSaveGame() {
     const pgn = game.pgn();
-    console.log("Saving Full PGN:", pgn); // Check this log!
-
     const token = localStorage.getItem("chess_token");
-    if (!token) {
-      alert("You are not logged in!");
-      return;
-    }
+    if (!token) return alert("Login required to save!");
 
     try {
-      const response = await axios.post(
+      const res = await axios.post(
         "http://127.0.0.1:8001/games/", 
         { pgn_moves: pgn }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert("Game Saved! ID: " + response.data.id);
-    } catch (error) {
-      console.error("Save Failed:", error);
-      alert("Failed to save.");
+      alert("Saved! ID: " + res.data.id);
+    } catch (err) {
+      console.error(err);
+      alert("Save failed.");
     }
   }
 
   return (
-    <div style={{ 
-      display: "flex", flexDirection: "column", alignItems: "center", marginTop: "50px", color: "white" 
-    }}>
-      <h2>Play Chess</h2>
-      <div style={{ width: "400px", height: "400px" }}>
-        <Chessboard position={game.fen()} onPieceDrop={onDrop} />
-      </div>
-      <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-        <button onClick={resetGame} style={{ padding: "10px 20px", cursor: "pointer" }}>Reset Game</button>
-        <button onClick={handleSaveGame} style={{ padding: "10px 20px", cursor: "pointer", backgroundColor: "#4CAF50", color: "white", border: "none" }}>Save Game</button>
-      </div>
+    <div className="flex flex-col min-h-screen p-4">
+        {/* Header / Back Button */}
+        <header className="w-full max-w-7xl mx-auto flex justify-between items-center p-2 mb-4">
+            <button 
+                onClick={() => navigate("/")}
+                className="text-xl text-gray-400 hover:text-white transition-colors flex items-center gap-2"
+            >
+                <i className="fas fa-arrow-left"></i> Back to Menu
+            </button>
+        </header>
+
+        <main id="game-screen" className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-start justify-center gap-8 lg:gap-12">
+            
+            {/* LEFT SIDE: BOARD */}
+            <div className="flex flex-col items-center gap-2 w-full lg:w-2/3 max-w-2xl">
+                {/* Opponent Info */}
+                <div className="w-full flex items-center gap-4 p-2 rounded-lg bg-[#2a2a2a] border border-[#3a3a3a]">
+                    <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center">
+                        <i className="fas fa-robot text-2xl text-gray-300"></i>
+                    </div>
+                    <p className="player-name font-bold text-lg flex-grow text-white">Opponent (Local)</p>
+                </div>
+
+                {/* THE BOARD */}
+                <div className="relative w-full shadow-2xl rounded-md overflow-hidden border-4 border-[#3a3a3a]">
+                    <Chessboard position={game.fen()} onPieceDrop={onDrop} />
+                </div>
+
+                {/* Player Info */}
+                <div className="w-full flex items-center gap-4 p-2 rounded-lg bg-[#2a2a2a] border border-[#3a3a3a]">
+                    <div className="w-12 h-12 bg-gray-500 rounded-full flex items-center justify-center">
+                        <i className="fas fa-user text-2xl text-gray-300"></i>
+                    </div>
+                    <p className="player-name font-bold text-lg flex-grow text-white">You</p>
+                </div>
+            </div>
+
+            {/* RIGHT SIDE: CONTROLS */}
+            <div className="w-full lg:w-1/3 lg:mt-20">
+                <div className="right-panel flex flex-col gap-4 bg-[#2a2a2a] p-4 rounded-xl border border-[#4a4a4a] shadow-xl">
+                    
+                    <h2 className="text-xl font-bold font-['Space_Grotesk'] text-center text-gray-200">CONTROLS</h2>
+                    
+                    {/* Move History Placeholder */}
+                    <div className="moves-container h-64 overflow-y-auto bg-[#242424] border border-[#3b3b3b] rounded-lg p-4 font-mono text-sm text-gray-300">
+                        {game.pgn() || "Moves will appear here..."}
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <button onClick={resetGame} className="btn-secondary text-gray-200 py-3 rounded-lg border border-[#4a4a4a] hover:bg-[#333] transition-colors">
+                            <i className="fas fa-rotate-right mr-2"></i> Reset
+                        </button>
+                        <button onClick={handleSaveGame} className="btn-analyze text-[#1b1b1b] font-bold py-3 rounded-lg">
+                            <i className="fas fa-save mr-2"></i> Save Game
+                        </button>
+                    </div>
+
+                    {game.isGameOver() && (
+                        <div className="mt-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-center text-white">
+                            <h3 className="font-bold text-xl">GAME OVER</h3>
+                            <p>{game.isCheckmate() ? "Checkmate!" : "Draw"}</p>
+                        </div>
+                    )}
+
+                </div>
+            </div>
+        </main>
     </div>
   );
 }

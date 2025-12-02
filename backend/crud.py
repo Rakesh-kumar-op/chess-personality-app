@@ -4,6 +4,8 @@ import schemas
 import security # Import the security utilities
 import chess.pgn
 import io
+import ai_agent
+
 
 
 def get_user_by_username(db: Session, username: str):
@@ -54,15 +56,17 @@ def analyze_user_games(db: Session, user_id: int):
     """
     # 1. Get all games for the user
     games = get_user_games(db, user_id=user_id)
-
+    
+    # --- HANDLE NO GAMES CASE ---
     if not games:
-        # Handle case for no games played
         return schemas.AnalysisResult(
             total_games=0,
             aggressive_score=0,
             defensive_score=0,
+            opening_preference="None",
             personality_type="Not Enough Data",
-            celebrity_match="Play a few games to find out!"
+            celebrity_match="Play a few games to find out!",
+            ai_report="Play some games to generate a psychological profile!"
         )
 
     # 2. Initialize analysis variables
@@ -73,33 +77,44 @@ def analyze_user_games(db: Session, user_id: int):
 
     # 3. Loop through each game and analyze
     for game in games:
-        # Use io.StringIO to treat the PGN string as a file
         pgn = io.StringIO(game.pgn_moves)
-
+        
         try:
-            # Read the game from the PGN
             game_data = chess.pgn.read_game(pgn)
-
+            
             if game_data:
-                # Store the first move
-                first_move = game_data.board().san(game_data.mainline_moves()[0])
-                opening_moves.append(first_move)
+                # FIX: Create a board object to track the state
+                board = game_data.board() 
+                all_moves = list(game_data.mainline_moves())
 
-                # Loop through all moves in the game
-                for move in game_data.mainline_moves():
-                    board = move.board()
-                    # Check for aggressive moves (checks)
-                    if board.is_check():
-                        aggressive_score += 1
-                    # Check for defensive moves (castling)
-                    if board.is_castling(move):
-                        defensive_score += 1
-                    # Check for captures
-                    if board.is_capture(move):
-                        aggressive_score += 0.5 # Give partial credit for captures
+                if all_moves:
+                    # Store first move for opening preference
+                    first_move = board.san(all_moves[0])
+                    opening_moves.append(first_move)
+                
+                    for move in all_moves:
+                        # --- Analyze BEFORE pushing the move ---
+                        
+                        # Check for captures
+                        if board.is_capture(move):
+                            aggressive_score += 0.5
+                        
+                        # Check for castling (defensive)
+                        if board.is_castling(move):
+                            defensive_score += 1
+
+                        # --- Make the move on our board ---
+                        board.push(move)
+
+                        # --- Analyze AFTER pushing the move ---
+                        
+                        # Did this move put the opponent in check?
+                        if board.is_check():
+                            aggressive_score += 1
+                            
         except Exception as e:
-            print(f"Error parsing PGN: {e}") # Handle potential bad PGN data
-            continue # Skip this game
+            print(f"Error parsing PGN: {e}") 
+            continue
 
     # 4. Determine personality based on scores
     personality_type = "Balanced"
@@ -112,17 +127,25 @@ def analyze_user_games(db: Session, user_id: int):
         personality_type = "Solid Defender"
         celebrity_match = "Tigran Petrosian"
 
-    # Find most common opening
     opening_preference = "Varies"
     if opening_moves:
         opening_preference = max(set(opening_moves), key=opening_moves.count)
 
-    # 5. Return the result using the Pydantic schema
+    # 5. CALL THE AI AGENT
+    pgn_samples = [g.pgn_moves for g in games[:5]]
+    current_stats = {
+        "aggressive_score": aggressive_score,
+        "defensive_score": defensive_score
+    }
+    
+    ai_text = ai_agent.generate_psychological_profile(pgn_samples, current_stats)
+
     return schemas.AnalysisResult(
         total_games=total_games,
         aggressive_score=int(aggressive_score),
         defensive_score=int(defensive_score),
         opening_preference=opening_preference,
         personality_type=personality_type,
-        celebrity_match=celebrity_match
+        celebrity_match=celebrity_match,
+        ai_report=ai_text 
     )

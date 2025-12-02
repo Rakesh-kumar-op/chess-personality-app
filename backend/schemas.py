@@ -48,5 +48,6 @@ class AnalysisResult(BaseModel):
     opening_preference: Optional[str] = None
     personality_type: str
     celebrity_match: str
+    ai_report: str
 
     model_config = ConfigDict(from_attributes=True) # Enable ORM mode

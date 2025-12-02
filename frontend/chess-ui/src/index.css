@@ -1,7 +1,91 @@
+/* Global Resets */
 body {
+  font-family: 'Inter', sans-serif;
+  background-color: #1e1e1e;
+  color: #e0e0e0;
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #2c2c2c; /* Dark background */
-  color: white; /* Light text */
+  padding: 0;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chessboard Colors */
+.dark-square { background-color: #74665a !important; }
+.light-square { background-color: #b9a491 !important; }
+
+/* Custom Buttons */
+.btn-custom { 
+  background-color: #8d756b;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: #1e1e1e;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+.btn-custom:hover { 
+  background-color: #a1887f;
+  transform: translateY(-2px);
+}
+.btn-custom:disabled {
+  background-color: #5a504b;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Analysis Button Glow Effects */
+.btn-analyze {
+  background: linear-gradient(135deg,#d1b792,#8c7a62);
+  box-shadow: 0 8px 24px rgba(209,183,146,.25), inset 0 1px 0 rgba(255,255,255,.35);
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+}
+.btn-analyze:hover .shine { 
+  transform: translateX(260px) skewX(-20deg); 
+}
+.shine {
+  position: absolute; top: 0; bottom: 0; width: 60px; left: -80px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+  transform: skewX(-20deg);
+  transition: transform .8s ease;
+  pointer-events: none;
+}
+
+/* Inputs and Textareas */
+.settings-form-input, .pgn-textarea {
+  background-color: #8d756b;
+  border: none;
+  outline: none;
+  color: #1e1e1e;
+  font-family: 'Inter', sans-serif;
+  padding: 10px;
+  border-radius: 8px;
+}
+.settings-form-input::placeholder { color: rgba(30, 30, 30, 0.6); }
+
+.pgn-textarea {
+  background-color: #2a2a2a;
+  border: 1px solid #4a4a4a;
+  color: #ddd;
+  resize: vertical;
+}
+.pgn-textarea:focus { 
+  border-color: #8d756b; 
+  box-shadow: 0 0 0 2px #8d756b; 
+}
+
+/* Loaders & Animations */
+.analysis-loader .dot {
+  background-color: #d1b792;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.analysis-loader .dot:nth-child(1) { animation-delay: -0.32s; }
+.analysis-loader .dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); } 
+  40% { transform: scale(1.0); }
 }
