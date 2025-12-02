@@ -35,7 +35,7 @@ function Game() {
 
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8001/games/", 
+        "https://chess-backend-u4wt.onrender.com/games/", 
         { pgn_moves: pgn }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );

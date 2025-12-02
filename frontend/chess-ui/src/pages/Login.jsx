@@ -17,7 +17,7 @@ function Login() {
     formData.append('password', password);
 
     try {
-      const response = await axios.post("http://127.0.0.1:8001/token", formData, {
+      const response = await axios.post("https://chess-backend-u4wt.onrender.com/token", formData, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
 

@@ -34,15 +34,15 @@ function Profile() {
 
       try {
         // 1. Fetch User Info
-        const userRes = await axios.get("http://127.0.0.1:8001/users/me", config);
+        const userRes = await axios.get("https://chess-backend-u4wt.onrender.com/users/me", config);
         setProfile(userRes.data);
 
         // 2. Fetch User's Games
-        const gamesRes = await axios.get("http://127.0.0.1:8001/games/", config);
+        const gamesRes = await axios.get("https://chess-backend-u4wt.onrender.com/games/", config);
         setGames(gamesRes.data);
 
         // 3. Fetch Personality Analysis
-        const analysisRes = await axios.get("http://127.0.0.1:8001/users/me/analysis", config);
+        const analysisRes = await axios.get("https://chess-backend-u4wt.onrender.com/users/me/analysis", config);
         setAnalysis(analysisRes.data);
 
       } catch (err) {

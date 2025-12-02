@@ -13,7 +13,7 @@ function Register() {
     setError("");
 
     try {
-      await axios.post("http://127.0.0.1:8001/users/", {
+      await axios.post("https://chess-backend-u4wt.onrender.com/users/", {
         username: username,
         password: password
       });
